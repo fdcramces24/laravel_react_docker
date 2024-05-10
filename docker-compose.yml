@@ -1,0 +1,77 @@
+version: "3.8"
+networks:
+  frontend:
+    driver: ${NETWORKS_DRIVER}
+  backend:
+    driver: ${NETWORKS_DRIVER}  
+  shared_network:
+    external: true
+services:
+  nginx:
+    container_name: nginx_container
+    build:
+      context: ..
+      dockerfile: ./${PROJECT_NAME}/nginx/Dockerfile 
+    volumes:
+      - type: bind
+        source: ../${PROJECT_DIR}
+        target: /var/www/html
+    ports:
+      - "8800:80"
+    networks:
+      - backend
+      - shared_network
+
+  php:
+    container_name: php_container
+    build:
+      context: ..
+      dockerfile: ./${PROJECT_NAME}/php/Dockerfile
+    volumes:
+      - ../${PROJECT_DIR}:/var/www/html:delegated
+    ports:
+      - "${IP}:9006:9006"
+    networks:
+      - backend
+      - shared_network
+
+  mariadb:
+    container_name: mariadb_container
+    build:
+      context: ./mariadb
+      args:
+        - http_proxy
+        - https_proxy
+        - no_proxy
+        - MARIADB_VERSION=${MARIADB_VERSION}
+    volumes:
+      #- mariadb:/var/lib/mysql
+      - ${MARIADB_ENTRYPOINT_INITDB}:/docker-entrypoint-initdb.d
+    ports:
+      - "${IP}:${MARIADB_PORT}:3307"
+    environment:
+      - TZ=${TIMEZONE}
+      - MYSQL_DATABASE=${MARIADB_DATABASE}
+      - MYSQL_USER=${MARIADB_USER}
+      - MYSQL_PASSWORD=${MARIADB_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
+    networks:
+      - backend
+
+  phpmyadmin:
+    build: ./phpmyadmin
+    environment:
+      - PMA_ARBITRARY=1
+      - MARIADB_USER=${PMA_USER}
+      - MARIADB_PASSWORD=${PMA_PASSWORD}
+      - MARIADB_ROOT_PASSWORD=${PMA_ROOT_PASSWORD}
+      - MAX_EXECUTION_TIME=${PMA_MAX_EXECUTION_TIME}
+      - MEMORY_LIMIT=${PMA_MEMORY_LIMIT}
+      - UPLOAD_LIMIT=${PMA_UPLOAD_LIMIT}
+    ports:
+      - "${IP}:${PMA_PORT}:80"
+    depends_on:
+      - "${PMA_DB_ENGINE}"
+    networks:
+      - frontend
+      - backend
