@@ -8,4 +8,4 @@ RUN mv default.conf default.conf
 
 WORKDIR /var/www/html
 
-COPY ./projects .
+COPY ./projects/backend .

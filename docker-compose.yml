@@ -7,15 +7,15 @@ networks:
   shared_network:
     external: true
 services:
+
   nginx:
-    container_name: nginx_container
+    container_name: nginx_container-2
     build:
       context: ..
       dockerfile: ./${PROJECT_NAME}/nginx/Dockerfile 
     volumes:
-      - type: bind
-        source: ../${PROJECT_DIR}
-        target: /var/www/html
+      - ../${PROJECT_NAME}/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ../${PROJECT_DIR}/backend:/var/www/html
     ports:
       - "8800:80"
     networks:
@@ -28,7 +28,7 @@ services:
       context: ..
       dockerfile: ./${PROJECT_NAME}/php/Dockerfile
     volumes:
-      - ../${PROJECT_DIR}:/var/www/html:delegated
+      - ../${PROJECT_DIR}/backend:/var/www/html:delegated
     ports:
       - "${IP}:9006:9006"
     networks:
@@ -58,20 +58,22 @@ services:
     networks:
       - backend
 
-  phpmyadmin:
-    build: ./phpmyadmin
-    environment:
-      - PMA_ARBITRARY=1
-      - MARIADB_USER=${PMA_USER}
-      - MARIADB_PASSWORD=${PMA_PASSWORD}
-      - MARIADB_ROOT_PASSWORD=${PMA_ROOT_PASSWORD}
-      - MAX_EXECUTION_TIME=${PMA_MAX_EXECUTION_TIME}
-      - MEMORY_LIMIT=${PMA_MEMORY_LIMIT}
-      - UPLOAD_LIMIT=${PMA_UPLOAD_LIMIT}
-    ports:
-      - "${IP}:${PMA_PORT}:80"
-    depends_on:
-      - "${PMA_DB_ENGINE}"
-    networks:
-      - frontend
-      - backend
+  # phpmyadmin:
+  #   build: ./phpmyadmin
+  #   environment:
+  #     - PMA_ARBITRARY=1
+  #     - MARIADB_USER=${PMA_USER}
+  #     - MARIADB_PASSWORD=${PMA_PASSWORD}
+  #     - MARIADB_ROOT_PASSWORD=${PMA_ROOT_PASSWORD}
+  #     - MAX_EXECUTION_TIME=${PMA_MAX_EXECUTION_TIME}
+  #     - MEMORY_LIMIT=${PMA_MEMORY_LIMIT}
+  #     - UPLOAD_LIMIT=${PMA_UPLOAD_LIMIT}
+  #   ports:
+  #     - "${IP}:${PMA_PORT}:80"
+  #   depends_on:
+  #     - "${PMA_DB_ENGINE}"
+  #   networks:
+  #     - frontend
+  #     - backend
+
+  
